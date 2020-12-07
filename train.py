@@ -11,16 +11,16 @@ from tensorflow.keras.callbacks import (
     TensorBoard
 )
 from yolov3_tf2.models import (
-    YoloV3, YoloV3Tiny, YoloLoss,
+    YoloV3Tiny, YoloLoss,
     yolo_anchors, yolo_anchor_masks,
     yolo_tiny_anchors, yolo_tiny_anchor_masks
 )
 from yolov3_tf2.utils import freeze_all
 import yolov3_tf2.dataset as dataset
 
-flags.DEFINE_string('dataset', '', 'path to dataset')
-flags.DEFINE_string('val_dataset', '', 'path to validation dataset')
-flags.DEFINE_boolean('tiny', False, 'yolov3 or yolov3-tiny')
+flags.DEFINE_string('dataset', r'D:\Project\SCS\dataset\first_device\ToTrain_Ani\train.tfrecord', 'path to dataset')
+flags.DEFINE_string('val_dataset', r'D:\Project\SCS\dataset\first_device\ToTrain_Ani\val.tfrecord', 'path to validation dataset')
+flags.DEFINE_boolean('tiny', True, 'yolov3 or yolov3-tiny')
 flags.DEFINE_string('weights', './checkpoints/yolov3.tf',
                     'path to weights file')
 flags.DEFINE_string('classes', './data/coco.names', 'path to classes file')
@@ -35,11 +35,11 @@ flags.DEFINE_enum('transfer', 'none',
                   'no_output: Transfer all but output, '
                   'frozen: Transfer and freeze all, '
                   'fine_tune: Transfer all and freeze darknet only')
-flags.DEFINE_integer('size', 416, 'image size')
-flags.DEFINE_integer('epochs', 2, 'number of epochs')
-flags.DEFINE_integer('batch_size', 8, 'batch size')
+flags.DEFINE_integer('size', 608, 'image size')
+flags.DEFINE_integer('epochs', 200, 'number of epochs')
+flags.DEFINE_integer('batch_size', 32, 'batch size')
 flags.DEFINE_float('learning_rate', 1e-3, 'learning rate')
-flags.DEFINE_integer('num_classes', 80, 'number of classes in the model')
+flags.DEFINE_integer('num_classes', 4, 'number of classes in the model')
 flags.DEFINE_integer('weights_num_classes', None, 'specify num class for `weights` file if different, '
                      'useful in transfer learning with different number of classes')
 
@@ -49,15 +49,17 @@ def main(_argv):
     for physical_device in physical_devices:
         tf.config.experimental.set_memory_growth(physical_device, True)
 
-    if FLAGS.tiny:
-        model = YoloV3Tiny(FLAGS.size, training=True,
-                           classes=FLAGS.num_classes)
-        anchors = yolo_tiny_anchors
-        anchor_masks = yolo_tiny_anchor_masks
-    else:
-        model = YoloV3(FLAGS.size, training=True, classes=FLAGS.num_classes)
-        anchors = yolo_anchors
-        anchor_masks = yolo_anchor_masks
+    # if FLAGS.tiny:
+    model = YoloV3Tiny(FLAGS.size, training=True,
+                        classes=FLAGS.num_classes)
+    anchors = yolo_tiny_anchors
+    anchor_masks = yolo_tiny_anchor_masks
+    model.summary()
+    # input("Nhap vao 1 so")
+    # else:
+    #     model = YoloV3(FLAGS.size, training=True, classes=FLAGS.num_classes)
+    #     anchors = yolo_anchors
+    #     anchor_masks = yolo_anchor_masks
 
     if FLAGS.dataset:
         train_dataset = dataset.load_tfrecord_dataset(

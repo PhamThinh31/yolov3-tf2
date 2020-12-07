@@ -8,17 +8,18 @@ import tensorflow as tf
 import lxml.etree
 import tqdm
 
-flags.DEFINE_string('data_dir', './data/voc2012_raw/VOCdevkit/VOC2012/',
+flags.DEFINE_string('data_dir', 'D:\Project\SCS\dataset\second_device\ToTrain_train_val',
                     'path to raw PASCAL VOC dataset')
-flags.DEFINE_enum('split', 'train', [
+flags.DEFINE_enum('split', 'val', [
                   'train', 'val'], 'specify train or val spit')
-flags.DEFINE_string('output_file', './data/voc2012_train.tfrecord', 'outpot dataset')
-flags.DEFINE_string('classes', './data/voc2012.names', 'classes file')
+flags.DEFINE_string('output_file', 'D:\Project\SCS\dataset\second_device\ToTrain_train_val\\val_thinh.tfrecord', 'output dataset')
+flags.DEFINE_string('classes', 'D:\Project\SCS\dataset\second_device\ToTrain_train_val\classes.names', 'classes file')
 
 
 def build_example(annotation, class_map):
+    # print(annotation['filename'])
     img_path = os.path.join(
-        FLAGS.data_dir, 'JPEGImages', annotation['filename'])
+        r'D:\Project\SCS\data\first_device\2020-11-26\STM1\ByClass\100(Manual Accept)', annotation['filename'])
     img_raw = open(img_path, 'rb').read()
     key = hashlib.sha256(img_raw).hexdigest()
 
@@ -36,16 +37,26 @@ def build_example(annotation, class_map):
     difficult_obj = []
     if 'object' in annotation:
         for obj in annotation['object']:
-            difficult = bool(int(obj['difficult']))
+            if obj['difficult'] == 'Unspecified':
+                _diff = 0
+            else:
+                _diff =int(obj['difficult'])
+            difficult = bool(_diff)
             difficult_obj.append(int(difficult))
-
+            if obj['name'] not in class_map:
+                obj['name'] ='Foreign_Material'
             xmin.append(float(obj['bndbox']['xmin']) / width)
             ymin.append(float(obj['bndbox']['ymin']) / height)
             xmax.append(float(obj['bndbox']['xmax']) / width)
             ymax.append(float(obj['bndbox']['ymax']) / height)
             classes_text.append(obj['name'].encode('utf8'))
+            
             classes.append(class_map[obj['name']])
-            truncated.append(int(obj['truncated']))
+            if obj['truncated'] == 'Unspecified':
+                _trunc = 0
+            else:
+                _trunc =int(obj['truncated'])
+            truncated.append(_trunc)
             views.append(obj['pose'].encode('utf8'))
 
     example = tf.train.Example(features=tf.train.Features(feature={
@@ -92,12 +103,15 @@ def main(_argv):
     logging.info("Class mapping loaded: %s", class_map)
 
     writer = tf.io.TFRecordWriter(FLAGS.output_file)
-    image_list = open(os.path.join(
-        FLAGS.data_dir, 'ImageSets', 'Main', '%s.txt' % FLAGS.split)).read().splitlines()
-    logging.info("Image list loaded: %d", len(image_list))
-    for name in tqdm.tqdm(image_list):
-        annotation_xml = os.path.join(
-            FLAGS.data_dir, 'Annotations', name + '.xml')
+    # image_list = open(os.path.join(
+    #     FLAGS.data_dir, 'ImageSets', 'Main', 'Chip_%s.txt' % FLAGS.split)).read().splitlines()
+    # logging.info("Image list loaded: %d", len(image_list))
+    image_list = os.listdir(r'D:\Project\SCS\data\first_device\2020-11-26\STM1\ByClass\100(Manual Accept)\Annotations')
+    for image in tqdm.tqdm(image_list):
+        name = image.split()[0]
+        
+        annotation_xml = os.path.join(r'D:\Project\SCS\data\first_device\2020-11-26\STM1\ByClass\100(Manual Accept)\Annotations',image)
+            #data_dir, 'Annotations', name + '.xml')
         annotation_xml = lxml.etree.fromstring(open(annotation_xml).read())
         annotation = parse_xml(annotation_xml)['annotation']
         tf_example = build_example(annotation, class_map)
