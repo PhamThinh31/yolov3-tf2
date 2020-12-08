@@ -18,9 +18,11 @@ from yolov3_tf2.models import (
 from yolov3_tf2.utils import freeze_all
 import yolov3_tf2.dataset as dataset
 
-flags.DEFINE_string('dataset', r'D:\Project\SCS\dataset\first_device\ToTrain_Ani\train.tfrecord', 'path to dataset')
-flags.DEFINE_string('val_dataset', r'D:\Project\SCS\dataset\first_device\ToTrain_Ani\val.tfrecord', 'path to validation dataset')
-flags.DEFINE_boolean('tiny', True, 'yolov3 or yolov3-tiny')
+flags.DEFINE_string('save_name', 'fulldata_1st', 'Name to save on checkpoints and logs folder')
+
+flags.DEFINE_string('dataset', r'D:\SCS\Ani\SCS\yolov3-tf2\dataset\train.tfrecord', 'path to dataset')
+flags.DEFINE_string('val_dataset', r'D:\SCS\Ani\SCS\yolov3-tf2\dataset\val.tfrecord', 'path to validation dataset')
+flags.DEFINE_boolean('tiny', True, 'yolov3 git or yolov3-tiny')
 flags.DEFINE_string('weights', './checkpoints/yolov3.tf',
                     'path to weights file')
 flags.DEFINE_string('classes', './data/coco.names', 'path to classes file')
@@ -181,9 +183,9 @@ def main(_argv):
         callbacks = [
             ReduceLROnPlateau(verbose=1),
             EarlyStopping(patience=3, verbose=1),
-            ModelCheckpoint('checkpoints/yolov3_train_{epoch}.tf',
+            ModelCheckpoint('checkpoints\\'+FLAGS.save_name+'\\yolov3_train_{epoch}.tf',
                             verbose=1, save_weights_only=True),
-            TensorBoard(log_dir='logs')
+            TensorBoard(log_dir='logs\\'+FLAGS.save_name)
         ]
 
         history = model.fit(train_dataset,
